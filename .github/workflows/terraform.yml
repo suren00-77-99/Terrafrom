@@ -10,23 +10,48 @@ permissions:
   contents: read
 
 jobs:
-  validate:
-    name: Format and validate
+  stage:
+    name: check out
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
+    
+  tf-Setup:      
+    name: Set up Terraform
+    runs-on: ubuntu-latest
+    steps:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.11.4"
 
+  tf-formate:
+    name: Terraform format and init
+    runs-on: ubuntu-latest
+    needs: tf-Setup
+    steps:        
       - name: Check Terraform formatting
         run: terraform fmt -check -recursive
-
+  
       - name: Initialize Terraform
         run: terraform init -backend=false
 
+  tf-validate:
+    name: Terraform validate
+    runs-on: ubuntu-latest
+    needs: tf-Setup
+    steps:
       - name: Validate Terraform configuration
         run: terraform validate
+
+  tf-plan:
+    name: Terraform plan
+    runs-on: ubuntu-latest
+    needs: tf-Setup
+    steps:
+      - name: Generate Terraform plan
+        run: terraform plan -out=tfplan
+
+      - name: Show Terraform plan
+        run: terraform show -no-color tfplan  
